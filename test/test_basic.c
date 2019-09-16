@@ -11,7 +11,7 @@ void test_basics( void )
 
     ar = &ard;
 
-    ar_new_sized( ar, 0 );
+    ar_init_sized( ar, 0 );
     mem = ar_reserve( ar, 128 );
     TEST_ASSERT_EQUAL( 128, ar->used );
     mem = ar_reserve( ar, 128 );
@@ -29,7 +29,7 @@ void test_basics( void )
 
 
     ar = &ard;
-    ar_new_sized( ar, 1 );
+    ar_init_sized( ar, 1 );
     mem = ar_reserve( ar, ar->size );
     TEST_ASSERT_TRUE( mem != NULL );
     mem = ar_reserve( ar, 1 );
@@ -89,7 +89,7 @@ void test_store( void )
     }
 
     ar = &ard;
-    ar_new_flexible( ar, 1 );
+    ar_init_flexible( ar, 1 );
 
     /* Non-aligned storage. */
     mem = ar_store( ar, 128, data );
@@ -102,6 +102,10 @@ void test_store( void )
     mem = ar_store_aligned( ar, 128, data, pagesize );
     TEST_ASSERT_EQUAL( 128, ar->used );
     TEST_ASSERT_TRUE( mem == ar->data );
+
+    TEST_ASSERT_EQUAL( pagesize, ar_page_size() );
+    TEST_ASSERT_EQUAL( 3*pagesize, ar_reservation_size( ar ) );
+    TEST_ASSERT_EQUAL( 3, ar_pool_count( ar ) );
 
     ar_free_pages( ar );
 }

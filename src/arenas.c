@@ -28,13 +28,13 @@ ar_t ar_new( void )
 }
 
 
-ar_t ar_new_sized( ar_t ar, ar_size_t count )
+ar_t ar_init_sized( ar_t ar, ar_size_t count )
 {
     return ar_new_common( ar, count, 0 );
 }
 
 
-ar_t ar_new_flexible( ar_t ar, ar_size_t count )
+ar_t ar_init_flexible( ar_t ar, ar_size_t count )
 {
     return ar_new_common( ar, count, 1 );
 }
@@ -83,18 +83,18 @@ ar_d ar_reserve( ar_t ar, ar_size_t size )
 
     if ( ( ar->used + size ) > ar->size ) {
 
-        if ( ar->prev == NULL ) {
+        if ( !ar->flex ) {
 
             return NULL;
 
         } else {
 
-            ar_t old;
+            ar_t prev;
 
             /* Create new Arenas Node. */
-            old = ar_malloc( sizeof( ar_s ) );
-            *old = *ar;
-            ar->prev = old;
+            prev = ar_malloc( sizeof( ar_s ) );
+            *prev = *ar;
+            ar->prev = prev;
             ar_allocate_bytes( ar );
             if ( ar->data == NULL )
                 ar_assert( 0 ); // GCOV_EXCL_LINE
@@ -180,6 +180,32 @@ ar_d ar_store_aligned( ar_t ar, ar_size_t size, ar_d data, ar_size_t alignment )
 }
 
 
+ar_size_t ar_page_size( void )
+{
+    return sysconf( _SC_PAGESIZE );
+}
+
+
+ar_size_t ar_reservation_size( ar_t ar )
+{
+    return ar->size * ar_pool_count( ar );
+}
+
+
+ar_size_t ar_pool_count( ar_t ar )
+{
+    ar_size_t cnt = 1;
+
+    /* Roll back to previous Arenas Node. */
+    while ( ar->prev ) {
+        cnt++;
+        ar = ar->prev;
+    }
+
+    return cnt;
+}
+
+
 
 /* ------------------------------------------------------------
  * Internal support:
@@ -194,24 +220,23 @@ static ar_t ar_new_common( ar_t ar, ar_size_t count, int resize )
         count = 1;
     }
 
-    ar->size = count * sysconf( _SC_PAGESIZE );
+    ar->size = count * ar_page_size();
     ar_allocate_bytes( ar );
 
     if ( ar->data == NULL )
         ar_assert( 0 ); // GCOV_EXCL_LINE
 
-    if ( resize )
-        ar->prev = ar;
-    else
-        ar->prev = NULL;
+    ar->flex = resize;
+    ar->prev = NULL;
 
     return ar;
 }
 
+
 static void ar_allocate_bytes( ar_t ar )
 {
     ar->used = 0;
-    if ( !posix_memalign( &ar->data, sysconf( _SC_PAGESIZE ), ar->size ) ) {
+    if ( !posix_memalign( &ar->data, ar_page_size(), ar->size ) ) {
         memset( ar->data, 0, ar->size );
     } else {
         ar->data = NULL; // GCOV_EXCL_LINE
@@ -241,7 +266,7 @@ static int ar_free_node( ar_t ar )
     ar_t rm;
 
     /* Roll back to previous Arenas Node. */
-    if ( ar->prev && ( ar != ar->prev ) ) {
+    if ( ar->prev ) {
         ar_free( ar->data );
         rm = ar->prev;
         *ar = *rm;

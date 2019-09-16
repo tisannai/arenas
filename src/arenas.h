@@ -49,7 +49,8 @@ struct ar_struct_s
     ar_size_t           size; /**< Reservation size for data pool. */
     ar_size_t           used; /**< Used count for data. */
     ar_d                data; /**< Pointer to data pool. */
-    struct ar_struct_s* prev;
+    struct ar_struct_s* prev; /**< Pointer to previous pool. */
+    ar_size_t           flex; /**< Flexible pooling. */
 };
 typedef struct ar_struct_s ar_s; /**< Arenas struct. */
 typedef ar_s*              ar_t; /**< Arenas pointer. */
@@ -115,7 +116,7 @@ ar_t ar_new( void );
 
 
 /**
- * Create Arenas with given size.
+ * Initialize Arenas to given size.
  *
  * Size of 0 is automatically converted to 1.
  *
@@ -124,18 +125,18 @@ ar_t ar_new( void );
  *
  * @return Arenas.
  */
-ar_t ar_new_sized( ar_t ar, ar_size_t count );
+ar_t ar_init_sized( ar_t ar, ar_size_t count );
 
 
 /**
- * Create Arenas with initial size and enable resizing mode.
+ * Initialize Arenas to given size and enable resizing mode.
  *
  * @param ar     Arenas.
  * @param count  Page count.
  *
  * @return Arenas.
  */
-ar_t ar_new_flexible( ar_t ar, ar_size_t count );
+ar_t ar_init_flexible( ar_t ar, ar_size_t count );
 
 
 /**
@@ -237,6 +238,34 @@ ar_d ar_store( ar_t ar, ar_size_t size, ar_d data );
  * @return Storage address.
  */
 ar_d ar_store_aligned( ar_t ar, ar_size_t size, ar_d data, ar_size_t alignment );
+
+
+/**
+ * Return page size (of the system)
+ *
+ * @return Page size.
+ */
+ar_size_t ar_page_size( void );
+
+
+/**
+ * Return total reservation.
+ *
+ * @param ar Arenas.
+ *
+ * @return Total reservation.
+ */
+ar_size_t ar_reservation_size( ar_t ar );
+
+
+/**
+ * Return pool count.
+ *
+ * @param ar Arenas.
+ *
+ * @return Pool count;
+ */
+ar_size_t ar_pool_count( ar_t ar );
 
 
 #endif

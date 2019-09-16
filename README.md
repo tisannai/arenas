@@ -32,41 +32,36 @@ memory in turns, i.e. the stack height is only item at a time.
 Arenas consists of OS memory page based memory pool and a
 Descriptor. The memory pool is aligned memory and the Descriptor is a
 separate allocation, which includes: pointer to the pool, pool size,
-and the usage count for memory reservations.
+and usage count for memory reservations.
 
 Arenas can be created in the default setting performing:
 
     ar_t ar = ar_new();
 
-The created Arenas has size of one page, and the returned Arenas
-Descriptor is heap allocated, and hence should be freed by some means
-(see below). Arenas has fixed size and it returns `NULL` for
-reservations when all memory has been used.
+This will allocate Arenas Descriptor and Arenas Page(s). The created
+Arenas has size of one page, and the returned Arenas Descriptor is
+heap allocated, and hence should be freed by some means (see
+below). Arenas has fixed size and it returns `NULL` for reservations
+when all memory has been used.
 
-Another way of creating the Arenas is to specify the size as well as
-expressing whether the Descriptor should be only initialized or
-additionally allocated as well.
+Another way of setting up Arenas is to pass Arenas Descriptor and
+specify the size in page count.
 
     ar_s ard;
-    ar_new_sized( &ard, 2 );
+    ar_init_sized( &ard, 2 );
 
-The example above will initialize the stack allocated Descriptor and
-it will be setup to contain two pages of memory. Alternatively we
-could request to allocate the Descriptor as well.
+The example above will initialize the stack (or pre) allocated
+Descriptor and it will be setup to contain two pages of memory.
 
-    ar = ar_new_size( NULL, 2 );
+Arenas can be initialized also to flexible mode. Flexible mode means
+that additional memory pages are allocated as needed, i.e. when pages
+become full.
 
-When `NULL` is supplied to `ar_new_size`, it will allocate the
-Descriptor along with the memory pool.
-
-Arenas can be created also in flexible mode, where additional memory
-pages are allocated as needed.
-
-    ar = ar_new_flexible( &ard, 4 );
+    ar = ar_init_flexible( &ard, 4 );
 
 In flexible mode more memory is allocated, but the additional pages
 are not continous compared to the previous allocation. However, all
-fresh memory is continous.
+fresh memory is continous by itself.
 
 Arenas with stack allocated Descriptor is destroyed using:
 
