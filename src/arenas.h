@@ -92,7 +92,8 @@ extern void* ar_realloc( void* ptr, size_t size );
 /* Default to common memory management functions. */
 
 /** Reserve memory. */
-#        define ar_malloc( size ) calloc( size, 1 )
+// #        define ar_malloc( size ) calloc( 1, size )
+#        define ar_malloc( size ) calloc( 1, (size) )
 
 /** Release memory. */
 #        define ar_free free

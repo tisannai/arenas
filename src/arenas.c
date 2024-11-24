@@ -14,11 +14,11 @@
 #include "arenas.h"
 
 
-static ar_t ar_new_common( ar_t ar, ar_size_t count, int resize );
-static void ar_allocate_bytes( ar_t ar );
+static ar_t      ar_new_common( ar_t ar, ar_size_t count, int resize );
+static void      ar_allocate_bytes( ar_t ar );
 static ar_size_t ar_alignment_pad( ar_t ar, ar_size_t alignment );
-static int ar_free_node( ar_t ar );
-void ar_void_assert( void );
+static int       ar_free_node( ar_t ar );
+void             ar_void_assert( void );
 
 
 
@@ -50,14 +50,16 @@ void ar_use( ar_t ar, ar_d mem, ar_size_t size )
 
 void ar_destroy( ar_p arp )
 {
-    if ( *arp == NULL )
+    if ( *arp == NULL ) {
         return;
+    }
 
     while ( ar_free_node( *arp ) )
         ;
 
-    if ( ( *arp )->data )
+    if ( ( *arp )->data ) {
         ar_free( ( *arp )->data );
+    }
 
     ar_free( *arp );
     *arp = NULL;
@@ -69,8 +71,9 @@ void ar_free_pages( ar_t ar )
     while ( ar_free_node( ar ) )
         ;
 
-    if ( ar->data )
+    if ( ar->data ) {
         ar_free( ar->data );
+    }
 
     ar->data = NULL;
     ar->used = 0;
@@ -96,8 +99,9 @@ ar_d ar_reserve( ar_t ar, ar_size_t size )
             *prev = *ar;
             ar->prev = prev;
             ar_allocate_bytes( ar );
-            if ( ar->data == NULL )
+            if ( ar->data == NULL ) {
                 ar_assert( 0 ); // GCOV_EXCL_LINE
+            }
         }
     }
 
@@ -152,8 +156,9 @@ ar_d ar_store( ar_t ar, ar_size_t size, ar_d data )
     ar_d seg;
     seg = ar_reserve( ar, size );
 
-    if ( seg == NULL )
+    if ( seg == NULL ) {
         return NULL;
+    }
 
     memcpy( seg, data, size );
 
@@ -171,8 +176,9 @@ ar_d ar_store_aligned( ar_t ar, ar_size_t size, ar_d data, ar_size_t alignment )
     ar_d seg;
     seg = ar_reserve_aligned( ar, size, alignment );
 
-    if ( seg == NULL )
+    if ( seg == NULL ) {
         return NULL;
+    }
 
     memcpy( seg, data, size );
 
@@ -213,8 +219,9 @@ ar_size_t ar_pool_count( ar_t ar )
 
 static ar_t ar_new_common( ar_t ar, ar_size_t count, int resize )
 {
-    if ( ar == NULL )
+    if ( ar == NULL ) {
         ar = ar_malloc( sizeof( ar_s ) );
+    }
 
     if ( count == 0 ) {
         count = 1;
@@ -223,8 +230,9 @@ static ar_t ar_new_common( ar_t ar, ar_size_t count, int resize )
     ar->size = count * ar_page_size();
     ar_allocate_bytes( ar );
 
-    if ( ar->data == NULL )
+    if ( ar->data == NULL ) {
         ar_assert( 0 ); // GCOV_EXCL_LINE
+    }
 
     ar->flex = resize;
     ar->prev = NULL;
@@ -253,10 +261,11 @@ static ar_size_t ar_alignment_pad( ar_t ar, ar_size_t alignment )
     ar_size_t mod;
     mod = addr % alignment;
 
-    if ( mod == 0 )
+    if ( mod == 0 ) {
         return 0;
-    else
+    } else {
         return ( alignment - mod );
+    }
 }
 
 
@@ -282,6 +291,6 @@ static int ar_free_node( ar_t ar )
 /**
  * Disabled (void) assertion.
  */
-void ar_void_assert( void ) // GCOV_EXCL_LINE
-{
-}
+// GCOV_EXCL_START
+void ar_void_assert( void ) {}
+// GCOV_EXCL_STOP
